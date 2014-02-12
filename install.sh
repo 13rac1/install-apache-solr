@@ -25,6 +25,7 @@ echo Installing Apache Solr multi-core
 echo
 
 # Set "constants"
+TOMCAT_PORT=8080
 TOMCAT_DIR=/usr/share/tomcat6
 TOMCAT_WEBAPP_DIR=$TOMCAT_DIR/webapps
 TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost
@@ -42,7 +43,7 @@ apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
 echo Checking Tomcat...
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
-TOMCAT_RUNNING=$(curl http://localhost:8080 | grep -c "It works" || true)
+TOMCAT_RUNNING=$(curl http://localhost:$TOMCAT_PORT | grep -c "It works" || true)
 
 if [ "$TOMCAT_RUNNING" = "0" ]; then
   echo "ERROR: Tomcat is not running"
@@ -119,7 +120,7 @@ service tomcat6 restart
 
 echo Checking Solr core0...
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
-SOLR_CORE0_RUNNING=$(curl http://localhost:8080/solr4/core0/select | grep -c "<response>" || true)
+SOLR_CORE0_RUNNING=$(curl http://localhost:$TOMCAT_PORT/solr4/core0/select | grep -c "<response>" || true)
 
 if [ "$SOLR_CORE0_RUNNING" = "0" ]; then
   echo "ERROR: Solr core0 is not running."
@@ -142,7 +143,7 @@ echo $SOLR_INSTALL_DIR/multicore/core0
 echo Then restart tomcat with: service tomcat6 restart
 echo
 echo The first Solr core is available at:
-echo http://localhost:8080/solr4/core0
+echo http://localhost:$TOMCAT_PORT/solr4/core0
 echo You will need to manually create additional cores.
 echo
 echo Additional information about Solr multicore is available here:
