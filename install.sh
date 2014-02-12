@@ -49,6 +49,7 @@ if [ "$TOMCAT_RUNNING" = "0" ]; then
   echo "ERROR: Tomcat is not running"
   exit
 fi
+echo Tomcat6 is responding as expected
 
 echo Locating an Apache Download Mirror
 # Get the mirror list, display only lines where http is in the content,
@@ -122,9 +123,10 @@ echo Checking Solr core0...
 SOLR_CORE0_RUNNING=$(curl http://localhost:$TOMCAT_PORT/solr4/core0/select | grep -c "<response>" || true)
 
 if [ "$SOLR_CORE0_RUNNING" = "0" ]; then
-  echo "ERROR: Solr core0 is not running."
+  echo ERROR: Solr core0 is not running
   exit
 fi
+echo Solr core0 is responding as expected
 
 # Delete source files and archive.
 rm -rf $SOLR_SRC_DIR
