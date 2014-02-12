@@ -37,15 +37,15 @@ SOLR_INSTALL_DIR=/usr/share/solr4
 
 # Install Tomcat 6
 # TODO: Tomcat 7 if available.
-#apt-get update
-#apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
+apt-get update
+apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
 echo Checking Tomcat...
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
 TOMCAT_RUNNING=$(curl http://localhost:8080 | grep -c "It works" || true)
 
 if [ "$TOMCAT_RUNNING" = "0" ]; then
-  echo "ERROR: Tomcat is not running."
+  echo "ERROR: Tomcat is not running"
   exit
 fi
 echo Tomcat is running
@@ -78,7 +78,7 @@ fi
 SOLR_FILENAME=solr-$SOLR_VERSION.tgz
 SOLR_FILE_URL=${MIRROR}lucene/solr/$SOLR_VERSION/$SOLR_FILENAME
 echo Downloading: $SOLR_FILE_URL
-#curl -o /tmp/$SOLR_FILENAME $SOLR_FILE_URL
+curl -o /tmp/$SOLR_FILENAME $SOLR_FILE_URL
 
 # Verify the download
 SOLR_MD5_URL=http://www.us.apache.org/dist/lucene/solr/$SOLR_VERSION/$SOLR_FILENAME.md5
