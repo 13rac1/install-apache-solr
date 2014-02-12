@@ -126,9 +126,13 @@ if [ "$SOLR_CORE0_RUNNING" = "0" ]; then
   exit
 fi
 
+# Delete source files and archive.
+rm -rf $SOLR_SRC_DIR
+rm /tmp/$SOLR_FILENAME
+
 echo Solr4 has been successfully setup as a Tomcat webapp.
 echo
-# TODO: Setup users
+# TODO: Setup solr users
 
 # TODO: Setup Drupal configurations
 echo If you are installing Solr for use with Drupal, please download the Apache
@@ -137,5 +141,9 @@ echo provided Solr configrations to the Solr core at:
 echo $SOLR_INSTALL_DIR/multicore/core0
 echo Then restart tomcat with: service tomcat6 restart
 echo
-echo The first Solr core is available at: http://localhost:8080/solr4/core0
-echo You will need to manually create any additional cores.
+echo The first Solr core is available at:
+echo http://localhost:8080/solr4/core0
+echo You will need to manually create additional cores.
+echo
+echo Additional information about Solr multicore is available here:
+echo https://wiki.apache.org/solr/CoreAdmin
