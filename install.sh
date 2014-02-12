@@ -33,6 +33,16 @@ echo
 apt-get update
 apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
+echo "Checking Tomcat..."
+# Load the Tomcat start page and check for the default response, ignore grep exit code.
+TOMCAT_RUNNING=$(curl http://localhost:8080 | grep -c "It works" || true)
+
+if [ "$TOMCAT_RUNNING" = "0" ]; then
+  echo "ERROR: Tomcat is not running."
+  exit
+fi
+echo "Tomcat is running."
+
 echo Locating an Apache Download Mirror
 # Get the mirror list, display only lines where http is in the content,
 # get the first match result.
