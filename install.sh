@@ -24,9 +24,10 @@ set -e
 echo Installing Apache Solr multi-core
 echo
 
-# Set constants
-TOMCAT_WEBAPP_DIR=/usr/share/tomcat6/webapps
-TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost/
+# Set "constants"
+TOMCAT_DIR=/usr/share/tomcat6
+TOMCAT_WEBAPP_DIR=$TOMCAT_DIR/webapps
+TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost
 SOLR_INSTALL_DIR=/usr/share/solr4
 
 # TODO: Check for user is root, otherwise fail.
@@ -39,7 +40,7 @@ SOLR_INSTALL_DIR=/usr/share/solr4
 #apt-get update
 #apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
-echo "Checking Tomcat..."
+echo Checking Tomcat...
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
 TOMCAT_RUNNING=$(curl http://localhost:8080 | grep -c "It works" || true)
 
@@ -47,7 +48,7 @@ if [ "$TOMCAT_RUNNING" = "0" ]; then
   echo "ERROR: Tomcat is not running."
   exit
 fi
-echo "Tomcat is running."
+echo Tomcat is running
 
 echo Locating an Apache Download Mirror
 # Get the mirror list, display only lines where http is in the content,
@@ -94,9 +95,10 @@ SOLR_SRC_DIR=/tmp/solr-$SOLR_VERSION
 mkdir -p $TOMCAT_WEBAPP_DIR
 cp $SOLR_SRC_DIR/dist/solr-$SOLR_VERSION.war $TOMCAT_WEBAPP_DIR/solr4.war
 
-# Copy the multicore files
+# Copy the multicore files and change ownership
 mkdir -p $SOLR_INSTALL_DIR/multicore
 cp -R $SOLR_SRC_DIR/example/multicore $SOLR_INSTALL_DIR/
+chown -R tomcat6:tomcat6 $SOLR_INSTALL_DIR
 
 # Setup the config file for Tomcat
 cat > $TOMCAT_CATALINA_DIR/solr4.xml << EOF
@@ -106,3 +108,34 @@ cat > $TOMCAT_CATALINA_DIR/solr4.xml << EOF
                  value="$SOLR_INSTALL_DIR/multicore" override="true" />
 </Context>
 EOF
+
+# Setup log4j
+# see: http://wiki.apache.org/solr/SolrLogging#Using_the_example_logging_setup_in_containers_other_than_Jetty
+cp $SOLR_SRC_DIR/example/lib/ext/* $TOMCAT_DIR/lib/
+cp $SOLR_SRC_DIR/example/resources/log4j.properties $TOMCAT_DIR/lib/
+
+# Restart Tomcat to enable Solr
+service tomcat6 restart
+
+echo Checking Solr core0...
+# Load the Tomcat start page and check for the default response, ignore grep exit code.
+SOLR_CORE0_RUNNING=$(curl http://localhost:8080/solr4/core0/select | grep -c "<response>" || true)
+
+if [ "$SOLR_CORE0_RUNNING" = "0" ]; then
+  echo "ERROR: Solr core0 is not running."
+  exit
+fi
+
+echo Solr4 has been successfully setup as a Tomcat webapp.
+echo
+# TODO: Setup users
+
+# TODO: Setup Drupal configurations
+echo If you are installing Solr for use with Drupal, please download the Apache
+echo Solr Search module or the Search API Solr search module and install the
+echo provided Solr configrations to the Solr core at:
+echo $SOLR_INSTALL_DIR/multicore/core0
+echo Then restart tomcat with: service tomcat6 restart
+echo
+echo The first Solr core is available at: http://localhost:8080/solr4/core0
+echo You will need to manually create any additional cores.
