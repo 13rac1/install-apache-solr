@@ -139,8 +139,8 @@ echo
 # TODO: Setup Drupal configurations
 echo If you are installing Solr for use with Drupal, please download the Apache
 echo Solr Search module or the Search API Solr search module and install the
-echo provided Solr configrations to the Solr core at:
-echo $SOLR_INSTALL_DIR/multicore/core0
+echo provided Solr configrations to the Solr core conf at:
+echo $SOLR_INSTALL_DIR/multicore/core0/conf
 echo Then restart tomcat with: service tomcat6 restart
 echo
 echo The first Solr core is available at:
