@@ -5,15 +5,22 @@ This installs the current multi-core Apache Solr 4.6.x in Tomcat 6 on Ubuntu/Deb
 
 Install
 -------
+To install without cloning the repository using the default 8080 port:
+
+    curl https://raw.github.com/eosrei/install-apache-solr/master/install.sh | sudo bash -s
+
+To install with the repository:
+
+    git clone https://github.com/eosrei/install-apache-solr.git
+    cd install-apache-solr
+    (edit the install.sh and change the port or install directories)
+    sudo ./install.sh
+
 Clone the repository to test with Vagrant:
 
     git clone https://github.com/eosrei/install-apache-solr.git
     cd install-apache-solr
     vagrant up
-
-To install without cloning the repository:
-
-    curl https://raw.github.com/eosrei/install-apache-solr/master/install.sh | sudo bash -s
 
 Notes
 -----
@@ -31,7 +38,7 @@ Todo
 ----
 * Additional pre-install checks for open port and required tools.
 * Support 4.x.x versions as released
-* Dectect and support Centos/Redhat
+* Detect and support Centos/Redhat
 * Install Drupal Apache Solr Search or Search API Solr search module configurations
 * Setup Tomcat6 Users
 
