@@ -23,6 +23,12 @@ set -e
 
 echo Installing Apache Solr multi-core
 echo
+
+# Set constants
+TOMCAT_WEBAPP_DIR=/usr/share/tomcat6/webapps
+TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost/
+SOLR_INSTALL_DIR=/usr/share/solr4
+
 # TODO: Check for user is root, otherwise fail.
 # TODO: Check for open port, default 8080
 # TODO: Check for md5sum
@@ -30,8 +36,8 @@ echo
 
 # Install Tomcat 6
 # TODO: Tomcat 7 if available.
-apt-get update
-apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
+#apt-get update
+#apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
 echo "Checking Tomcat..."
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
@@ -61,6 +67,7 @@ echo Found version: $SOLR_VERSION
 ARRAY_SOLR_VERSION=(${SOLR_VERSION//./ })
 
 # Check the minor version
+# TODO: Check/test all of 4.x.x
 if [ ${ARRAY_SOLR_VERSION[1]} != 6 ]; then
   echo ERROR: Found minor version: ${ARRAY_SOLR_VERSION[1]}. Only Solr 4.6.x is supported by this script.
   exit 1;
@@ -70,7 +77,7 @@ fi
 SOLR_FILENAME=solr-$SOLR_VERSION.tgz
 SOLR_FILE_URL=${MIRROR}lucene/solr/$SOLR_VERSION/$SOLR_FILENAME
 echo Downloading: $SOLR_FILE_URL
-curl -o /tmp/$SOLR_FILENAME $SOLR_FILEURL
+#curl -o /tmp/$SOLR_FILENAME $SOLR_FILE_URL
 
 # Verify the download
 SOLR_MD5_URL=http://www.us.apache.org/dist/lucene/solr/$SOLR_VERSION/$SOLR_FILENAME.md5
@@ -79,3 +86,23 @@ curl -o /tmp/$SOLR_FILENAME.md5 $SOLR_MD5_URL
 echo Verifying the MD5 checksum
 (cd /tmp; md5sum -c $SOLR_FILENAME.md5)
 
+echo Uncompressing the file
+(cd /tmp; tar zxf $SOLR_FILENAME)
+
+echo Installing Solr as a Tomcat webapp
+SOLR_SRC_DIR=/tmp/solr-$SOLR_VERSION
+mkdir -p $TOMCAT_WEBAPP_DIR
+cp $SOLR_SRC_DIR/dist/solr-$SOLR_VERSION.war $TOMCAT_WEBAPP_DIR/solr4.war
+
+# Copy the multicore files
+mkdir -p $SOLR_INSTALL_DIR/multicore
+cp -R $SOLR_SRC_DIR/example/multicore $SOLR_INSTALL_DIR/
+
+# Setup the config file for Tomcat
+cat > $TOMCAT_CATALINA_DIR/solr4.xml << EOF
+<Context docBase="$TOMCAT_WEBAPP_DIR/solr4.war" debug="0" privileged="true"
+         allowLinking="true" crossContext="true">
+    <Environment name="solr/home" type="java.lang.String"
+                 value="$SOLR_INSTALL_DIR/multicore" override="true" />
+</Context>
+EOF
