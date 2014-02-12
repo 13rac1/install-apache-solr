@@ -22,6 +22,8 @@ Clone the repository to test with Vagrant:
     cd install-apache-solr
     vagrant up
 
+Tested on Ubuntu 12.04LTS and Linux Mint 15; others TBD.
+
 Notes
 -----
 * The default Tomcat 6 port is 8080. It should be firewalled from external access.
