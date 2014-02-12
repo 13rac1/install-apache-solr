@@ -1,5 +1,5 @@
 Solr 4.6.x multi-core Ubuntu/Debian install.sh
-==============================================
+----------------------------------------------
 
 This installs the current multi-core Apache Solr 4.6.x in Tomcat 6 on Ubuntu/Debian.
 
