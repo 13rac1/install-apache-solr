@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.box = "precise64"
   config.vm.box_url = "http://files.vagrantup.com/precise64.box"
-  config.vm.hostname = "install-apache-solr"
+  config.vm.hostname = "install-solr-ubuntu"
 
   # Run the install script
   config.vm.provision "shell", path: "../install.sh"
