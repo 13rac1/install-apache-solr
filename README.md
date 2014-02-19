@@ -16,10 +16,10 @@ To install with the repository:
     (edit the install.sh and change the port or install directories)
     sudo ./install.sh
 
-Clone the repository to test with Vagrant:
+Clone the repository to test Ubuntu 12.04 LTS with Vagrant:
 
     git clone https://github.com/eosrei/install-apache-solr.git
-    cd install-apache-solr
+    cd install-apache-solr/vagrant-precise64
     vagrant up
 
 Tested on Ubuntu 12.04LTS and Linux Mint 15; others TBD.
