@@ -34,12 +34,11 @@ SOLR_INSTALL_DIR=/usr/share/solr4
 # TODO: Check for user is root, otherwise fail.
 # TODO: Check for open port, default 8080
 # TODO: Check for md5sum
-# TODO: Check for curl
 
-# Install Tomcat 6
+# Install Tomcat 6 & curl
 # TODO: Tomcat 7 if available.
 apt-get update
-apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user
+apt-get install -y curl tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
 echo Checking Tomcat using: http://localhost:$TOMCAT_PORT
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
