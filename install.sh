@@ -40,6 +40,8 @@ SOLR_INSTALL_DIR=/usr/share/solr4
 apt-get update
 apt-get install -y curl tomcat6 tomcat6-admin tomcat6-common tomcat6-user
 
+#yum install -y curl tomcat6
+
 echo Checking Tomcat using: http://localhost:$TOMCAT_PORT
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
 TOMCAT_RUNNING=$(curl http://localhost:$TOMCAT_PORT | grep -c "It works" || true)
