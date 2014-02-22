@@ -2,7 +2,7 @@ Solr 4.6.x multi-core install.sh
 --------------------------------
 
 This script install the current multi-core Apache Solr 4.6.x in Tomcat 6 on
-Debian, Ubuntu, LinuxMint, Red Hat, and CentOS.
+Debian, Ubuntu, LinuxMint, Red Hat, Fedora and CentOS.
 
 Install
 -------
@@ -26,9 +26,6 @@ Clone the repository to test Ubuntu 12.04 LTS with Vagrant:
     cd install-apache-solr/vagrant-precise64
     vagrant up
 
-Tested on Ubuntu 12.04LTS, CentOS 6.5, and Linux Mint 15. Additional tests and
-distibutions in the future.
-
 Notes
 -----
 * The default Tomcat 6 port is 8080. It should be firewalled from external access.
@@ -47,6 +44,15 @@ Todo
 * Install Drupal Apache Solr Search or Search API Solr search module configurations
 * Setup Tomcat6 Users
 * Docker support/tests
+
+Tested Distributions
+--------------------
+* Ubuntu 12.04 LTS (Vagrant test included)
+* CentOS 6.5 (Vagrant test included)
+* Fedora 18 (Vagrant test included)
+* Linux Mint 15 (Tested locally)
+
+Additional tests and distibutions in the future...
 
 More information
 ----------------
