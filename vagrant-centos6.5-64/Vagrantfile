@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.hostname = "install-solr-centos"
 
   # Run the install script
-  #config.vm.provision "shell", path: "../install.sh"
+  config.vm.provision "shell", path: "../install.sh"
 
 end
 

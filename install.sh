@@ -1,6 +1,7 @@
 #!/bin/bash
-# Solr 4.6.x multi-core Ubuntu/Debian installer
-
+# Solr 4.x.x multi-core installer for multiple distributions
+# Supports: Debian, Ubuntu, LinuxMint, CentOS, Red Hat and Fedora.
+ 
 # Copyright 2014 Brad Erickson
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,36 +22,101 @@
 # Enable error checking
 set -e
 
-echo Installing Apache Solr multi-core
-echo
-
-# Set "constants"
+# Set CONSTANTS
 TOMCAT_PORT=8080
 TOMCAT_DIR=/usr/share/tomcat6
 TOMCAT_WEBAPP_DIR=$TOMCAT_DIR/webapps
 TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost
 SOLR_INSTALL_DIR=/usr/share/solr4
 
-# TODO: Check for user is root, otherwise fail.
-# TODO: Check for open port, default 8080
-# TODO: Check for md5sum
+# Function to check for required programs
+function program_exists {
+  echo -n Checking for $1...
+  if ! command -v $1 2>/dev/null; then
+     echo "Not found"
+     exit 1
+  fi
+}
 
-# Install Tomcat 6 & curl
-# TODO: Tomcat 7 if available.
-apt-get update
-apt-get install -y curl tomcat6 tomcat6-admin tomcat6-common tomcat6-user
+echo "Installing Apache Solr multi-core"
+echo
 
-#yum install -y curl tomcat6
-
-echo Checking Tomcat using: http://localhost:$TOMCAT_PORT
-# Load the Tomcat start page and check for the default response, ignore grep exit code.
-TOMCAT_RUNNING=$(curl http://localhost:$TOMCAT_PORT | grep -c "It works" || true)
-
-if [ "$TOMCAT_RUNNING" = "0" ]; then
-  echo "ERROR: Tomcat is not running"
-  exit
+# Check for user is root
+echo -n "Running as root..."
+if [[ $EUID -ne 0 ]]; then
+  echo "No. This must be run as root"
+  exit 1
 fi
-echo Tomcat6 is responding as expected
+echo "Yes"
+
+# TODO: Check for open port, default 8080
+
+# Check for md5sum
+program_exists md5sum
+
+# Determine which package manager is available
+echo -n "Checking for a supported package manager..."
+if command -v apt-get 2>/dev/null; then
+  # Debian, Ubuntu, Linux Mint
+  PACKAGE_MAN=apt-get
+elif command -v yum 2>/dev/null; then
+  # Red Hat, CentOS
+  PACKAGE_MAN=yum
+else
+  echo "Not Found"
+  echo "Supported package managers: apt-get, yum"
+  exit 1
+fi
+
+echo "Installing Tomcat 6 and curl"
+if [ "$PACKAGE_MAN" = "apt-get" ]; then
+  apt-get update
+  apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user curl
+elif [ "$PACKAGE_MAN" = "yum" ]; then
+  yum install -y tomcat6 tomcat6-webapps tomcat6-admin-webapps curl
+  # yum doesn't start tomcat
+  service tomcat6 restart
+fi
+
+# Check for Java >= 1.6.0
+echo -n "Checking Java version >= 1.6.0..."
+JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
+if [ $JAVA_VER -lt 16 ]; then
+  if [ "$PACKAGE_MAN" = "apt-get" ]; then
+    echo "Failed"
+    echo "Apache Solr requires Java 1.6.0 or greater."
+    exit 1
+  elif [ "$PACKAGE_MAN" = "yum" ]; then
+    echo "Upgrading"
+    # Install Java 1.7.0; it should become the default
+    yum install -y java-1.7.0
+    service tomcat6 restart
+    echo -n "Rechecking Java version >= 1.6.0..."
+    JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
+    if [ $JAVA_VER -lt 16 ]; then
+      echo "Failed"
+      echo "Apache Solr requires Java 1.6.0 or greater."
+      exit 1
+    fi
+    echo "Ok"
+  fi
+else
+  echo "Ok"
+fi
+
+# Wait a moment for Tomcat to start up
+sleep 5
+
+TOMCAT_URL=http://localhost:$TOMCAT_PORT
+echo -n "Checking Tomcat: $TOMCAT_URL..."
+# Load the Tomcat start page and return the HTTP code
+TOMCAT_RUNNING=$(curl -s -o /dev/null -w '%{http_code}' $TOMCAT_URL)
+
+if [ "$TOMCAT_RUNNING" != "200" ]; then
+  echo "Failed. Tomcat is not running."
+  exit 1
+fi
+echo "Ok"
 
 echo Locating an Apache Download Mirror
 # Get the mirror list, display only lines where http is in the content,
@@ -84,6 +150,7 @@ curl -o /tmp/$SOLR_FILENAME $SOLR_FILE_URL
 
 # Verify the download
 SOLR_MD5_URL=http://www.us.apache.org/dist/lucene/solr/$SOLR_VERSION/$SOLR_FILENAME.md5
+echo
 echo Downloading MD5 checksum: $SOLR_MD5_URL
 curl -o /tmp/$SOLR_FILENAME.md5 $SOLR_MD5_URL
 echo Verifying the MD5 checksum
@@ -100,14 +167,17 @@ cp $SOLR_SRC_DIR/dist/solr-$SOLR_VERSION.war $TOMCAT_WEBAPP_DIR/solr4.war
 # Copy the multicore files and change ownership
 mkdir -p $SOLR_INSTALL_DIR/multicore
 cp -R $SOLR_SRC_DIR/example/multicore $SOLR_INSTALL_DIR/
-chown -R tomcat6:tomcat6 $SOLR_INSTALL_DIR
+# Debian & Red Hat use different tomcat usernames/groups
+if [ "$PACKAGE_MAN" = "apt-get" ]; then
+  chown -R tomcat6:tomcat6 $SOLR_INSTALL_DIR
+elif [ "$PACKAGE_MAN" = "yum" ]; then
+  chown -R tomcat:tomcat $SOLR_INSTALL_DIR
+fi
 
 # Setup the config file for Tomcat
 cat > $TOMCAT_CATALINA_DIR/solr4.xml << EOF
-<Context docBase="$TOMCAT_WEBAPP_DIR/solr4.war" debug="0" privileged="true"
-         allowLinking="true" crossContext="true">
-    <Environment name="solr/home" type="java.lang.String"
-                 value="$SOLR_INSTALL_DIR/multicore" override="true" />
+<Context docBase="$TOMCAT_WEBAPP_DIR/solr4.war" debug="0" privileged="true" allowLinking="true" crossContext="true">
+    <Environment name="solr/home" type="java.lang.String" value="$SOLR_INSTALL_DIR/multicore" override="true" />
 </Context>
 EOF
 
@@ -116,18 +186,21 @@ EOF
 cp $SOLR_SRC_DIR/example/lib/ext/* $TOMCAT_DIR/lib/
 cp $SOLR_SRC_DIR/example/resources/log4j.properties $TOMCAT_DIR/lib/
 
-# Restart Tomcat to enable Solr
+echo "Restarting Tomcat to enable Solr"
 service tomcat6 restart
+
+# Wait for tomcat to restart
+sleep 5
 
 echo Checking Solr core0...
 # Load the Tomcat start page and check for the default response, ignore grep exit code.
 SOLR_CORE0_RUNNING=$(curl http://localhost:$TOMCAT_PORT/solr4/core0/select | grep -c "<response>" || true)
 
 if [ "$SOLR_CORE0_RUNNING" = "0" ]; then
-  echo ERROR: Solr core0 is not running
+  echo Failed. Solr core0 is not returning expected results.
   exit
 fi
-echo Solr core0 is responding as expected
+echo "Ok"
 
 # Delete source files and archive.
 rm -rf $SOLR_SRC_DIR
