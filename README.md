@@ -46,6 +46,7 @@ Todo
 * Support 4.x.x versions as released
 * Install Drupal Apache Solr Search or Search API Solr search module configurations
 * Setup Tomcat6 Users
+* Docker support/tests
 
 More information
 ----------------

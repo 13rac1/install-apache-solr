@@ -28,6 +28,10 @@ TOMCAT_DIR=/usr/share/tomcat6
 TOMCAT_WEBAPP_DIR=$TOMCAT_DIR/webapps
 TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost
 SOLR_INSTALL_DIR=/usr/share/solr4
+APACHE_CLOSER_URL=http://www.apache.org/dyn/closer.cgi
+APACHE_BACKUP_URL=http://www.us.apache.org/dist/lucene/solr
+DOWNLOAD_DIR=/root
+TMP_DIR=/tmp
 
 # Function to check for required programs
 function program_exists {
@@ -121,7 +125,7 @@ echo "Ok"
 echo Locating an Apache Download Mirror
 # Get the mirror list, display only lines where http is in the content,
 # get the first match result.
-MIRROR=$(curl -s http://www.apache.org/dyn/closer.cgi \
+MIRROR=$(curl -s $APACHE_CLOSER_URL \
          | grep '>http' | grep -o -m 1 'http://[^" ]*/' | head -n1)
 echo Using: $MIRROR
 
@@ -130,44 +134,45 @@ HTML_LUCENE_SOLR=$(curl -s ${MIRROR}lucene/solr/)
 
 # Get the most recent 4.x.x version number.
 SOLR_VERSION=$(echo $HTML_LUCENE_SOLR | grep -o '4\.[^/ ]*' | tail -n1)
+# TODO: Check/test for 4.x.x
 echo Found version: $SOLR_VERSION
 
 # Convert the version string into an array
 ARRAY_SOLR_VERSION=(${SOLR_VERSION//./ })
 
 # Check the minor version
-# TODO: Check/test all of 4.x.x
 if [ ${ARRAY_SOLR_VERSION[1]} != 6 ]; then
   echo ERROR: Found minor version: ${ARRAY_SOLR_VERSION[1]}. Only Solr 4.6.x is supported by this script.
   exit 1;
 fi
 
-# Construct a filename and download the file to /tmp
+# Construct a filename and download the file to $DOWNLOAD_DIR
 SOLR_FILENAME=solr-$SOLR_VERSION.tgz
 SOLR_FILE_URL=${MIRROR}lucene/solr/$SOLR_VERSION/$SOLR_FILENAME
 echo Downloading: $SOLR_FILE_URL
-curl -o /tmp/$SOLR_FILENAME $SOLR_FILE_URL
+curl -o $DOWNLOAD_DIR/$SOLR_FILENAME $SOLR_FILE_URL
 
 # Verify the download
-SOLR_MD5_URL=http://www.us.apache.org/dist/lucene/solr/$SOLR_VERSION/$SOLR_FILENAME.md5
+SOLR_MD5_URL=$APACHE_BACKUP_URL/$SOLR_VERSION/$SOLR_FILENAME.md5
 echo
 echo Downloading MD5 checksum: $SOLR_MD5_URL
-curl -o /tmp/$SOLR_FILENAME.md5 $SOLR_MD5_URL
+curl -o $DOWNLOAD_DIR/$SOLR_FILENAME.md5 $SOLR_MD5_URL
 echo Verifying the MD5 checksum
-(cd /tmp; md5sum -c $SOLR_FILENAME.md5)
+(cd $DOWNLOAD_DIR; md5sum -c $SOLR_FILENAME.md5)
 
 echo Uncompressing the file
-(cd /tmp; tar zxf $SOLR_FILENAME)
+(cd $TMP_DIR; tar zxf $DOWNLOAD_DIR/$SOLR_FILENAME)
 
 echo Installing Solr as a Tomcat webapp
-SOLR_SRC_DIR=/tmp/solr-$SOLR_VERSION
+SOLR_SRC_DIR=$TMP_DIR/solr-$SOLR_VERSION
 mkdir -p $TOMCAT_WEBAPP_DIR
 cp $SOLR_SRC_DIR/dist/solr-$SOLR_VERSION.war $TOMCAT_WEBAPP_DIR/solr4.war
 
 # Copy the multicore files and change ownership
 mkdir -p $SOLR_INSTALL_DIR/multicore
 cp -R $SOLR_SRC_DIR/example/multicore $SOLR_INSTALL_DIR/
-# Debian & Red Hat use different tomcat usernames/groups
+# Debian & Red Hat use different tomcat users/groups
+# TODO: Detect correct user/group
 if [ "$PACKAGE_MAN" = "apt-get" ]; then
   chown -R tomcat6:tomcat6 $SOLR_INSTALL_DIR
 elif [ "$PACKAGE_MAN" = "yum" ]; then
@@ -204,9 +209,10 @@ echo "Ok"
 
 # Delete source files and archive.
 rm -rf $SOLR_SRC_DIR
-rm /tmp/$SOLR_FILENAME
+rm $DOWNLOAD_DIR/$SOLR_FILENAME
+rm $DOWNLOAD_DIR/$SOLR_FILENAME.md5
 
-echo Solr4 has been successfully setup as a Tomcat webapp.
+echo Apache Solr4 has been successfully setup as a Tomcat webapp.
 echo
 # TODO: Setup solr users
 
