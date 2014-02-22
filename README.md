@@ -1,7 +1,7 @@
 Solr 4.6.x multi-core install.sh
 --------------------------------
 
-This script install the current multi-core Apache Solr 4.6.x in Tomcat 6 on
+This script installs the current multi-core Apache Solr 4.6.x in Tomcat 6 on
 Debian, Ubuntu, LinuxMint, Red Hat, Fedora, and CentOS.
 
 Install
