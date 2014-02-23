@@ -1,7 +1,7 @@
 #!/bin/bash
 # Solr 4.x.x multi-core installer for multiple distributions
 # Supports: Debian, Ubuntu, LinuxMint, CentOS, Red Hat and Fedora.
- 
+
 # Copyright 2014 Brad Erickson
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# This scripts performs an automatic install of the current multi-core Apache
-# Solr 4.6.x in Tomcat 6 on Ubuntu/Debian. Ideally, it would be updated to
-# support 4.x.x as released and Centos/Redhat.
 
 # Enable error checking
 set -e
@@ -76,10 +72,13 @@ echo "Installing Tomcat 6 and curl"
 if [ "$PACKAGE_MAN" = "apt-get" ]; then
   apt-get update
   apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user curl
+  # Apt-get starts tomcat
 elif [ "$PACKAGE_MAN" = "yum" ]; then
   yum install -y tomcat6 tomcat6-webapps tomcat6-admin-webapps curl
-  # yum doesn't start tomcat
-  service tomcat6 restart
+  # Set tomcat to start on boot
+  chkconfig tomcat6 on
+  # Start tomcat
+  service tomcat6 start
 fi
 
 # Check for Java >= 1.6.0
