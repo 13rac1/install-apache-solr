@@ -28,8 +28,9 @@ Clone the repository to test Ubuntu 12.04 LTS with Vagrant:
 
 Notes
 -----
+* Installs Tomcat 6 using the distribution's package manager.
 * The default Tomcat 6 port is 8080. It should be firewalled from external access.
-* Only one core is created, additional cores will need to be created manually.
+* Only one Solr core is created, additional cores will need to be created manually.
 * Drupal specific config files need to be installed manually to:
   $SOLR_INSTALL_DIR/multicore/core0/conf
 * A random Apache Download Mirror is choosen and some are slow. It is OK to
@@ -38,11 +39,11 @@ Notes
 
 Todo
 ----
-* Additional pre-install checks for open port and required tools.
 * Support 4.x.x versions as released
 * Install Drupal Apache Solr Search or Search API Solr search module configurations
 * Setup Tomcat6 Users
 * Docker support/tests
+* Install current Tomcat7 from the Apache Download mirrors 
 
 Tested Distributions
 --------------------
