@@ -46,11 +46,12 @@ Todo
 
 Tested Distributions
 --------------------
-* Ubuntu 12.04 LTS (Vagrant test included)
-* CentOS 6.5 (Vagrant test included)
-* Fedora 18 (Vagrant test included)
-* Debian 6 (Vagrant test included)
-* Linux Mint 15 (Tested locally)
+* Debian 6 x64 (Vagrant test included)
+* Ubuntu 12.04 LTS x64 (Vagrant test included)
+* Ubuntu 13.10 x64 (Vagrant test included)
+* Linux Mint 15 x64 (Tested locally)
+* CentOS 6.5 x64 (Vagrant test included)
+* Fedora 18 x64 (Vagrant test included)
 
 Additional tests and distibutions in the future...
 
