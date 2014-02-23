@@ -34,8 +34,7 @@ Notes
   $SOLR_INSTALL_DIR/multicore/core0/conf
 * A random Apache Download Mirror is choosen and some are slow. It is OK to
   stop(^C) the script and start it again.
-* This might work to upgrade between 4.6.x releases. It shouldn't delete data.
-  Test it.
+* This might work to upgrade between 4.6.x releases. Test it.
 
 Todo
 ----
@@ -50,6 +49,7 @@ Tested Distributions
 * Ubuntu 12.04 LTS (Vagrant test included)
 * CentOS 6.5 (Vagrant test included)
 * Fedora 18 (Vagrant test included)
+* Debian 6 (Vagrant test included)
 * Linux Mint 15 (Tested locally)
 
 Additional tests and distibutions in the future...
@@ -57,3 +57,4 @@ Additional tests and distibutions in the future...
 More information
 ----------------
 * Solr Multicore details: https://wiki.apache.org/solr/CoreAdmin
+* Solr on Tomcat details: https://wiki.apache.org/solr/SolrTomcat
