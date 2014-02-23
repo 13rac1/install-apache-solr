@@ -23,7 +23,7 @@ To install with the repository:
 Clone the repository to test Ubuntu 12.04 LTS with Vagrant:
 
     git clone https://github.com/eosrei/install-apache-solr.git
-    cd install-apache-solr/vagrant-precise64
+    cd install-apache-solr/vagrant/ubuntu12.04
     vagrant up
 
 Notes
