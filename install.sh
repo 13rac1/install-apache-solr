@@ -133,17 +133,21 @@ HTML_LUCENE_SOLR=$(curl -s ${MIRROR}lucene/solr/)
 
 # Get the most recent 4.x.x version number.
 SOLR_VERSION=$(echo $HTML_LUCENE_SOLR | grep -o '4\.[^/ ]*' | tail -n1)
-# TODO: Check/test for 4.x.x
+if [ -z "$SOLR_VERSION" ]; then
+  echo ERROR: Apache Solr 4.x.x archive cannot be found.
+  exit 1
+fi
+
 echo Found version: $SOLR_VERSION
 
 # Convert the version string into an array
 ARRAY_SOLR_VERSION=(${SOLR_VERSION//./ })
 
-# Check the minor version
-if [ ${ARRAY_SOLR_VERSION[1]} != 6 ]; then
-  echo ERROR: Found minor version: ${ARRAY_SOLR_VERSION[1]}. Only Solr 4.6.x is supported by this script.
-  exit 1;
-fi
+# Check the minor version (Still needed?)
+#if [ ${ARRAY_SOLR_VERSION[1]} != 6 ]; then
+#  echo ERROR: Only Solr 4.6.x or greater is supported by this script.
+#  exit 1;
+#fi
 
 # Construct a filename and download the file to $DOWNLOAD_DIR
 SOLR_FILENAME=solr-$SOLR_VERSION.tgz
@@ -211,7 +215,7 @@ rm -rf $SOLR_SRC_DIR
 rm $DOWNLOAD_DIR/$SOLR_FILENAME
 rm $DOWNLOAD_DIR/$SOLR_FILENAME.md5
 
-echo Apache Solr4 has been successfully setup as a Tomcat webapp.
+echo Apache Solr $SOLR_VERSION has been successfully setup as a Tomcat webapp.
 echo
 # TODO: Setup solr users
 
