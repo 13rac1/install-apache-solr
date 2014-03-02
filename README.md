@@ -33,6 +33,7 @@ Clone the repository to test Ubuntu 12.04 LTS with Vagrant:
 
 Notes
 -----
+* Are you *sure* you need Solr on your project? Think about it. Be sure.
 * Installs Tomcat 6 using the distribution's package manager.
 * The default Tomcat 6 port is 8080. It should be firewalled from external
   access.
