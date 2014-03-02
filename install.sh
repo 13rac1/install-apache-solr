@@ -29,30 +29,100 @@ APACHE_BACKUP_URL=http://www.us.apache.org/dist/lucene/solr
 DOWNLOAD_DIR=/root
 TMP_DIR=/tmp
 
+function display_help {
+  echo \
+"Install for Apache Solr 4.x.x in Tomcat 6 on Debian, Ubuntu, LinuxMint,
+Red Hat, Fedora, and CentOS.
+
+Usage: install.sh [OPTION]
+
+Options:
+
+  -a, --apachesolr-schema
+        Install the current Drupal Apache Solr Search 7.x-1.x-dev module conf
+        for Solr 4.x
+
+  -h, --help
+        Display help
+
+  -s, --search-api-schema
+        Install the current Drupal Search API Solr search 7.x-1.x-dev module
+        conf for Solr 4.x
+"
+}
+
 # Function to check for required programs
 function program_exists {
   echo -n Checking for $1...
   if ! command -v $1 2>/dev/null; then
-     echo "Not found"
+     echo "Not found" >&2
      exit 1
   fi
 }
 
-echo "Installing Apache Solr multi-core"
-echo
+# Set defaults for the optional schema install
+INSTALL_APACHESOLR=""
+INSTALL_SEARCH_API=""
+
+# Parse the command line options
+while :
+do
+  case "$1" in
+    -a | --apachesolr-schema)
+      INSTALL_APACHESOLR="install-apachesolr"
+      shift
+      ;;
+    -h | --help)
+      display_help
+      exit 0
+      ;;
+    -s | --search-api-schema)
+      INSTALL_SEARCH_API="install-search-api"
+      shift
+      ;;
+    --) # End of all options
+      shift
+      break
+      ;;
+    -*)
+      echo "ERROR: Unknown option: $1" >&2
+      exit 1
+      ;;
+    *)  # No more options
+      break
+      ;;
+  esac
+done
+
+# If both options are set, exit with error.
+if [ $INSTALL_APACHESOLR ] && [ $INSTALL_SEARCH_API ]; then
+  echo "ERROR: Only one Drupal module Solr conf can be selected for install." >&2
+  display_help
+  exit 1
+fi
+
+echo -n "Installing Apache Solr 4.x.x multi-core with "
+if [ $INSTALL_APACHESOLR ]; then
+  echo "Drupal Apache Solr Search module conf"
+elif [ $INSTALL_SEARCH_API ]; then
+  echo "Drupal Search API Solr Search module conf"
+else
+  echo "default conf"
+fi
 
 # Check for user is root
 echo -n "Running as root..."
 if [[ $EUID -ne 0 ]]; then
-  echo "No. This must be run as root"
+  echo "No. This must be run as root" >&2
   exit 1
 fi
 echo "Yes"
 
 # TODO: Check for open port, default 8080
 
-# Check for md5sum
+# Check for md5sum & tar
 program_exists md5sum
+program_exists tar
 
 # Determine which package manager is available
 echo -n "Checking for a supported package manager..."
@@ -63,8 +133,8 @@ elif command -v yum 2>/dev/null; then
   # Red Hat, CentOS
   PACKAGE_MAN=yum
 else
-  echo "Not Found"
-  echo "Supported package managers: apt-get, yum"
+  echo "Not Found" >&2
+  echo "Supported package managers: apt-get, yum" >&2
   exit 1
 fi
 
@@ -86,8 +156,8 @@ echo -n "Checking Java version >= 1.6.0..."
 JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
 if [ $JAVA_VER -lt 16 ]; then
   if [ "$PACKAGE_MAN" = "apt-get" ]; then
-    echo "Failed"
-    echo "Apache Solr requires Java 1.6.0 or greater."
+    echo "Failed" >&2
+    echo "Apache Solr requires Java 1.6.0 or greater." >&2
     exit 1
   elif [ "$PACKAGE_MAN" = "yum" ]; then
     echo "Upgrading"
@@ -97,8 +167,8 @@ if [ $JAVA_VER -lt 16 ]; then
     echo -n "Rechecking Java version >= 1.6.0..."
     JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
     if [ $JAVA_VER -lt 16 ]; then
-      echo "Failed"
-      echo "Apache Solr requires Java 1.6.0 or greater."
+      echo "Failed" >&2
+      echo "Apache Solr requires Java 1.6.0 or greater." >&2
       exit 1
     fi
     echo "Ok"
@@ -107,16 +177,16 @@ else
   echo "Ok"
 fi
 
+TOMCAT_URL=http://localhost:$TOMCAT_PORT
+echo -n "Checking Tomcat: $TOMCAT_URL..."
 # Wait a moment for Tomcat to start up
 sleep 5
 
-TOMCAT_URL=http://localhost:$TOMCAT_PORT
-echo -n "Checking Tomcat: $TOMCAT_URL..."
 # Load the Tomcat start page and return the HTTP code
 TOMCAT_RUNNING=$(curl -s -o /dev/null -w '%{http_code}' $TOMCAT_URL)
 
 if [ "$TOMCAT_RUNNING" != "200" ]; then
-  echo "Failed. Tomcat is not running."
+  echo "Failed. Tomcat is not running." >&2
   exit 1
 fi
 echo "Ok"
@@ -134,7 +204,7 @@ HTML_LUCENE_SOLR=$(curl -s ${MIRROR}lucene/solr/)
 # Get the most recent 4.x.x version number.
 SOLR_VERSION=$(echo $HTML_LUCENE_SOLR | grep -o '4\.[^/ ]*' | tail -n1)
 if [ -z "$SOLR_VERSION" ]; then
-  echo ERROR: Apache Solr 4.x.x archive cannot be found.
+  echo "ERROR: Apache Solr 4.x.x archive cannot be found." >&2
   exit 1
 fi
 
@@ -194,6 +264,25 @@ EOF
 cp $SOLR_SRC_DIR/example/lib/ext/* $TOMCAT_DIR/lib/
 cp $SOLR_SRC_DIR/example/resources/log4j.properties $TOMCAT_DIR/lib/
 
+# Install Drupal module specific schema
+if [ $INSTALL_APACHESOLR ]; then
+  echo "Downloading Drupal Apache Solr Search module 7.x-1.x-dev"
+  curl -o $DOWNLOAD_DIR/apachesolr.tar.gz http://ftp.drupal.org/files/projects/apachesolr-7.x-1.x-dev.tar.gz
+  (cd $DOWNLOAD_DIR; tar zxf apachesolr.tar.gz)
+  echo "Installing schema"
+  cp $DOWNLOAD_DIR/apachesolr/solr-conf/solr-4.x/* $SOLR_INSTALL_DIR/multicore/core0/conf
+  rm $DOWNLOAD_DIR/apachesolr.tar.gz
+  rm -rf $DOWNLOAD_DIR/apachesolr
+elif [ $INSTALL_SEARCH_API ]; then
+  echo "Downloading Drupal Search API Solr Search module 7.x-1.x-dev"
+  curl -o $DOWNLOAD_DIR/search_api_solr.tar.gz http://ftp.drupal.org/files/projects/search_api_solr-7.x-1.x-dev.tar.gz
+  (cd $DOWNLOAD_DIR; tar zxf search_api_solr.tar.gz)
+  echo "Installing schema"
+  cp $DOWNLOAD_DIR/search_api_solr/solr-conf/4.x/* $SOLR_INSTALL_DIR/multicore/core0/conf
+  rm $DOWNLOAD_DIR/search_api_solr.tar.gz
+  rm -rf $DOWNLOAD_DIR/search_api_solr
+fi
+
 echo "Restarting Tomcat to enable Solr"
 service tomcat6 restart
 
@@ -205,7 +294,7 @@ echo Checking Solr core0...
 SOLR_CORE0_RUNNING=$(curl http://localhost:$TOMCAT_PORT/solr4/core0/select | grep -c "<response>" || true)
 
 if [ "$SOLR_CORE0_RUNNING" = "0" ]; then
-  echo Failed. Solr core0 is not returning expected results.
+  echo "Failed. Solr core0 is not returning expected results." >&2
   exit
 fi
 echo "Ok"
@@ -219,16 +308,19 @@ echo Apache Solr $SOLR_VERSION has been successfully setup as a Tomcat webapp.
 echo
 # TODO: Setup solr users
 
-# TODO: Setup Drupal configurations
-echo If you are installing Solr for use with Drupal, please download the Apache
-echo Solr Search module or the Search API Solr search module and install the
-echo provided Solr configrations to the Solr core conf at:
-echo $SOLR_INSTALL_DIR/multicore/core0/conf
-echo Then restart tomcat with: service tomcat6 restart
-echo
-echo The first Solr core is available at:
-echo http://localhost:$TOMCAT_PORT/solr4/core0
-echo You will need to manually create additional cores.
-echo
-echo Additional information about Solr multicore is available here:
-echo https://wiki.apache.org/solr/CoreAdmin
+echo \
+"The Solr configuration for core0 is available at:
+  $SOLR_INSTALL_DIR/multicore/core0/conf
+Then restart tomcat with:
+  service tomcat6 restart
+The first Solr core is available via HTTP at:
+  http://localhost:$TOMCAT_PORT/solr4/core0
+
+You must manually create additional cores.
+
+Additional information about Solr multicore is available here:
+https://wiki.apache.org/solr/CoreAdmin
+
+Done!
+"
+exit 0
