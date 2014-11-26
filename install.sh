@@ -20,9 +20,9 @@ set -e
 
 # Set CONSTANTS
 TOMCAT_PORT=8080
-TOMCAT_DIR=/usr/share/tomcat6
+TOMCAT_DIR=/usr/share/tomcat7
 TOMCAT_WEBAPP_DIR=$TOMCAT_DIR/webapps
-TOMCAT_CATALINA_DIR=/etc/tomcat6/Catalina/localhost
+TOMCAT_CATALINA_DIR=/etc/tomcat7/Catalina/localhost
 SOLR_INSTALL_DIR=/usr/share/solr4
 APACHE_CLOSER_URL=http://www.apache.org/dyn/closer.cgi
 APACHE_BACKUP_URL=http://www.us.apache.org/dist/lucene/solr
@@ -141,14 +141,14 @@ fi
 echo "Installing Tomcat 6 and curl"
 if [ "$PACKAGE_MAN" = "apt-get" ]; then
   apt-get update
-  apt-get install -y tomcat6 tomcat6-admin tomcat6-common tomcat6-user curl
+  apt-get install -y tomcat7 tomcat7-admin tomcat7-common tomcat7-user curl
   # Apt-get starts tomcat
 elif [ "$PACKAGE_MAN" = "yum" ]; then
-  yum install -y tomcat6 tomcat6-webapps tomcat6-admin-webapps curl
+  yum install -y tomcat7 tomcat7-webapps tomcat7-admin-webapps curl
   # Set tomcat to start on boot
-  chkconfig tomcat6 on
+  chkconfig tomcat7 on
   # Start tomcat
-  service tomcat6 start
+  service tomcat7 start
 fi
 
 # Check for Java >= 1.6.0
@@ -163,7 +163,7 @@ if [ $JAVA_VER -lt 16 ]; then
     echo "Upgrading"
     # Install Java 1.7.0; it should become the default
     yum install -y java-1.7.0
-    service tomcat6 restart
+    service tomcat7 restart
     echo -n "Rechecking Java version >= 1.6.0..."
     JAVA_VER=$(java -version 2>&1 | sed 's/java version "\(.*\)\.\(.*\)\..*"/\1\2/; 1q')
     if [ $JAVA_VER -lt 16 ]; then
@@ -247,7 +247,7 @@ cp -R $SOLR_SRC_DIR/example/multicore $SOLR_INSTALL_DIR/
 # Debian & Red Hat use different tomcat users/groups
 # TODO: Detect correct user/group
 if [ "$PACKAGE_MAN" = "apt-get" ]; then
-  chown -R tomcat6:tomcat6 $SOLR_INSTALL_DIR
+  chown -R tomcat7:tomcat7 $SOLR_INSTALL_DIR
 elif [ "$PACKAGE_MAN" = "yum" ]; then
   chown -R tomcat:tomcat $SOLR_INSTALL_DIR
 fi
@@ -284,7 +284,7 @@ elif [ $INSTALL_SEARCH_API ]; then
 fi
 
 echo "Restarting Tomcat to enable Solr"
-service tomcat6 restart
+service tomcat7 restart
 
 # Wait for tomcat to restart
 sleep 5
@@ -312,7 +312,7 @@ echo \
 "The Solr configuration for core0 is available at:
   $SOLR_INSTALL_DIR/multicore/core0/conf
 Then restart tomcat with:
-  service tomcat6 restart
+  service tomcat7 restart
 The first Solr core is available via HTTP at:
   http://localhost:$TOMCAT_PORT/solr4/core0
 
